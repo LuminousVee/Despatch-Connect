@@ -1,0 +1,42 @@
+// .gitlab-ci.yml (CI/CD pipeline)
+stages:
+  - build
+  - test
+  - deploy
+
+build:
+  stage: build
+  image: node:14
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - build/
+
+test:
+  stage: test
+  image: node:14
+  script:
+    - npm ci
+    - npm run test
+    - npm run cypress:run
+
+deploy_staging:
+  stage: deploy
+  image: python:3.8
+  script:
+    - pip install awscli
+    - aws s3 sync build/ s3://staging-bucket
+  only:
+    - develop
+
+deploy_production:
+  stage: deploy
+  image: python:3.8
+  script:
+    - pip install awscli
+    - aws s3 sync build/ s3://production-bucket
+  only:
+    - main
+  when: manual
